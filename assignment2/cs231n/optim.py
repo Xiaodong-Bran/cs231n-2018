@@ -65,7 +65,13 @@ def sgd_momentum(w, dw, config=None):
     # TODO: Implement the momentum update formula. Store the updated value in #
     # the next_w variable. You should also use and update the velocity v.     #
     ###########################################################################
-    pass
+    #pass
+    rou = config.get('momentum')
+    lr = config.get('learning_rate')
+    
+    v = rou*v + dw
+    w -= lr*v
+    next_w = w
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -99,7 +105,16 @@ def rmsprop(x, dx, config=None):
     # in the next_x variable. Don't forget to update cache value stored in    #
     # config['cache'].                                                        #
     ###########################################################################
-    pass
+    # pass
+    lr = config.get('learning_rate')
+    decay = config.get('decay_rate')
+    epsilon = config.get('epsilon')
+    cache = config.get('cache')
+    
+    cache = decay*cache + (1-decay)*dx**2
+    x -= lr * dx / (np.sqrt(cache)+epsilon)
+    next_x = x
+    config['cache']=cache
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -136,7 +151,15 @@ def adam(x, dx, config=None):
     # the next_x variable. Don't forget to update the m, v, and t variables   #
     # stored in config.                                                       #
     ###########################################################################
-    pass
+    # pass
+    m = config['m']
+    v =config['v']
+    m = config['beta1']*m + (1-config['beta1'])*dx
+    v = config['beta2']*v + (1-config['beta2'])*dx**2
+    x -= config['learning_rate']*m/(np.sqrt(v)+config['epsilon'])
+    next_x = x
+    config['m']=m
+    config['v']=v
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
