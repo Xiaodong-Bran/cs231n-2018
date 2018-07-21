@@ -42,11 +42,8 @@ def affine_bn_relu_forward(x, w, b, gamma, beta, bn_param):
     - out: Output from the affine-bn-relu layer
     - cache: Object to give to the backward pass
     """
-    #print("input shape to affine: ",x.shape)
     out1, fc_cache = affine_forward(x, w, b)
-    #print("input shape to bn: ",out1.shape)
     out2, bn_cache = batchnorm_forward(out1, gamma, beta, bn_param)
-    #print("input shape to relu: ",out2.shape)
     out3, relu_cache = relu_forward(out2)
     cache = (fc_cache, bn_cache, relu_cache)
     return out3, cache
@@ -60,6 +57,30 @@ def affine_bn_relu_backward(dout, cache):
     dout2, dgamma, dbeta = batchnorm_backward(dout1, bn_cache)
     dx, dw, db = affine_backward(dout2, fc_cache)
     return dx,dw,db,dgamma,dbeta
+
+
+def affine_bn_relu_drop_forward(x, w, b, gamma, beta, bn_param, dropout_param):
+    
+    out1, fc_cache = affine_forward(x, w, b)
+    out2, bn_cache = batchnorm_forward(out1, gamma, beta, bn_param)
+    out3, relu_cache = relu_forward(out2)
+    out4, drop_cache = dropout_forward(out3, dropout_param)
+    cache = (fc_cache, bn_cache, relu_cache, drop_cache)
+    return out4, cache
+
+def affine_bn_relu_drop_backward(dout, cache):
+    """
+    Backward pass for the affine-bn-relu-drop convenience layer
+    """    
+    fc_cache, bn_cache, relu_cache, drop_cache = cache
+    dout0 = dropout_backward(dout, drop_cache)
+    dout1 = relu_backward(dout0, relu_cache)
+    dout2, dgamma, dbeta = batchnorm_backward(dout1, bn_cache)
+    dx, dw, db = affine_backward(dout2, fc_cache)
+    return dx,dw,db,dgamma,dbeta
+
+
+
 
 def conv_relu_forward(x, w, b, conv_param):
     """

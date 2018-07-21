@@ -269,8 +269,15 @@ class FullyConnectedNet(object):
         _input =  X
         for i in range(self.num_layers-1):
             j = i + 1
-            if self.use_batchnorm:
+            
+            if self.use_dropout and  self.use_batchnorm:
+                _input, cache_temp = affine_bn_relu_drop_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)], self.params['gamma'+str(j)], self.params['beta'+str(j)], self.bn_params[i] ,self.dropout_param)
+            
+            
+            elif self.use_batchnorm :
                 _input, cache_temp = affine_bn_relu_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)], self.params['gamma'+str(j)], self.params['beta'+str(j)],self.bn_params[i])
+                
+            # normal
             else:
                 _input, cache_temp = affine_relu_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)])
             
@@ -315,10 +322,19 @@ class FullyConnectedNet(object):
         
         for i in reversed(range(self.num_layers-1)):
             j = i+1
-            if self.use_batchnorm:
+            
+            # use batch normalization and drop out 
+            
+            if self.use_dropout and self.use_batchnorm:
+                dout,dw,db,dgamma,dbeta = affine_bn_relu_drop_backward(dout, cache[i])
+                grads['gamma'+str(j)] = dgamma
+                grads['beta'+str(j)] = dbeta
+            
+            elif self.use_batchnorm:
                 dout,dw,db,dgamma,dbeta = affine_bn_relu_backward(dout, cache[i])
                 grads['gamma'+str(j)] = dgamma
                 grads['beta'+str(j)] = dbeta
+                
             else:    
                 dout, dw, db = affine_relu_backward(dout, cache[i])
             grads['W'+str(j)] = dw + self.reg * self.params['W'+str(j)]
