@@ -192,16 +192,21 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zero.                                #
         ############################################################################
         #pass
-        if self.use_batchnorm:
-            pass
-        
         dims_combine = [input_dim]+ hidden_dims +[num_classes]
         
+        if self.use_batchnorm:
+            for i in range(len(hidden_dims)):
+                j = i+1
+                self.params['gamma'+str(j)] =  np.ones([dims_combine[j]])
+                self.params['beta'+str(j)] = np.zeros([dims_combine[j]])
+        
+        
         for i in range(self.num_layers):   
-            j = i+1
+            j = i+1 
             self.params['W'+str(j)] = np.random.normal(loc=0.0, scale=weight_scale, size=(dims_combine[i],dims_combine[j]))
             self.params['b'+str(j)] = np.zeros([dims_combine[j]])
-        
+                
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -264,10 +269,14 @@ class FullyConnectedNet(object):
         _input =  X
         for i in range(self.num_layers-1):
             j = i + 1
-            _input, cache_temp = affine_relu_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)])
+            if self.use_batchnorm:
+                _input, cache_temp = affine_bn_relu_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)], self.params['gamma'+str(j)], self.params['beta'+str(j)],self.bn_params[i])
+            else:
+                _input, cache_temp = affine_relu_forward(_input, self.params['W'+str(j)], self.params['b'+str(j)])
+            
             cache.append(cache_temp)
         
-        # for the last FC layer NOT the affine-relu-layer
+        # for the last affine- FC layer NOT the affine-relu-layer
         scores, cache_temp = affine_forward(_input, self.params['W'+str(j+1)], self.params['b'+str(j+1)])
         cache.append(cache_temp)
         ############################################################################
@@ -306,9 +315,16 @@ class FullyConnectedNet(object):
         
         for i in reversed(range(self.num_layers-1)):
             j = i+1
-            dout, dw, db = affine_relu_backward(dout, cache[i])
+            if self.use_batchnorm:
+                dout,dw,db,dgamma,dbeta = affine_bn_relu_backward(dout, cache[i])
+                grads['gamma'+str(j)] = dgamma
+                grads['beta'+str(j)] = dbeta
+            else:    
+                dout, dw, db = affine_relu_backward(dout, cache[i])
             grads['W'+str(j)] = dw + self.reg * self.params['W'+str(j)]
             grads['b'+str(j)] = db
+            
+            
             loss += 0.5*self.reg*(np.sum(np.square(self.params['W'+str(j)])))  
                                   
         ############################################################################
