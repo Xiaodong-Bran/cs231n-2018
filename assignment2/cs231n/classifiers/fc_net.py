@@ -330,11 +330,15 @@ class FullyConnectedNet(object):
                 grads['gamma'+str(j)] = dgamma
                 grads['beta'+str(j)] = dbeta
             
+            # use batch normalization only
+            
             elif self.use_batchnorm:
                 dout,dw,db,dgamma,dbeta = affine_bn_relu_backward(dout, cache[i])
                 grads['gamma'+str(j)] = dgamma
                 grads['beta'+str(j)] = dbeta
-                
+            
+            # normal use 
+            
             else:    
                 dout, dw, db = affine_relu_backward(dout, cache[i])
             grads['W'+str(j)] = dw + self.reg * self.params['W'+str(j)]
